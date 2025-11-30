@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shortlify24 - Premium URL Shortener</title>
+
+<style>
+/* ---------------------------------------------------
+   PREMIUM MODERN GLASS UI
+--------------------------------------------------- */
+:root {
+  --primary: #5b72ff;
+  --primary-dark: #4253d8;
+  --bg-light: #eef1ff;
+  --bg-dark: #0d0f1a;
+  --glass-light: rgba(255,255,255,0.45);
+  --glass-dark: rgba(0,0,0,0.45);
+  --text-light: #0f0f0f;
+  --text-dark: #f3f3f3;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+
+body.light{background:var(--bg-light);color:var(--text-light);}
+body.dark{background:var(--bg-dark);color:var(--text-dark);}
+
+.glass-card{
+  background:var(--glass-light);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border-radius:20px;
+  padding:40px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.1);
+}
+body.dark .glass-card{
+  background:var(--glass-dark);
+}
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px 25px;
+}
+.toggle-btn{
+  padding:10px 18px;
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  transition:0.3s;
+}
+.toggle-btn:hover{background:var(--primary-dark);}
+
+.hero{
+  text-align:center;
+  margin-top:90px;
+  padding:20px;
+}
+.hero h1{
+  font-size:3rem;
+  font-weight:700;
+  margin-bottom:10px;
+}
+.hero p{opacity:.7;font-size:1.1rem;}
+
+.url-box{
+  margin-top:35px;
+  display:flex;
+  justify-content:center;
+  gap:15px;
+}
+.url-box input{
+  width:55%;
+  padding:15px;
+  border-radius:10px;
+  border:none;
+  font-size:1rem;
+  outline:none;
+}
+.url-box button{
+  padding:15px 25px;
+  background:var(--primary);
+  color:#fff;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  transition:.3s;
+}
+.url-box button:hover{background:var(--primary-dark);}
+
+.short-link{
+  text-align:center;
+  margin-top:25px;
+  display:none;
+}
+.short-link input{
+  width:60%;
+  padding:12px;
+  border-radius:10px;
+  outline:none;
+  border:none;
+  font-size:1rem;
+}
+.short-link button{
+  padding:12px 20px;
+  margin-left:10px;
+  background:var(--primary);
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  color:#fff;
+}
+.qr-section{text-align:center;margin-top:30px;display:none;}
+</style>
+</head>
+
+<body class="light">
+
+<header>
+  <h2>Shortlify24</h2>
+  <button class="toggle-btn">Dark Mode</button>
+</header>
+
+<div class="hero">
+  <div class="glass-card">
+    <h1>Premium URL Shortening</h1>
+    <p>Fast, Secure, Modern — Shorten your links instantly.</p>
+
+    <div class="url-box">
+      <input type="text" id="longUrl" placeholder="Paste your long URL here...">
+      <button id="shortenBtn">Shorten</button>
+    </div>
+
+    <div class="short-link" id="shortLinkDiv">
+      <input id="shortUrl" readonly>
+      <button id="copyBtn">Copy</button>
+    </div>
+
+    <div class="qr-section" id="qrSection">
+      <h3>QR Code:</h3>
+      <canvas id="qrcode"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script>
+/* ---------- THEME ---------- */
+const toggleBtn=document.querySelector(".toggle-btn");
+toggleBtn.onclick=()=>{
+  document.body.classList.toggle("dark");
+  document.body.classList.toggle("light");
+  toggleBtn.innerText=document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
+};
+
+/* ---------- Shortener ---------- */
+function base62(n){
+  const chars="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let s="";
+  while(n>0){s=chars[n%62]+s;n=Math.floor(n/62);}
+  return s||"0";
+}
+
+const shortenBtn=document.getElementById("shortenBtn");
+shortenBtn.onclick=()=>{
+  const url=document.getElementById("longUrl").value.trim();
+  if(!url) return alert("Enter URL first!");
+
+  const code=base62(Date.now());
+  const short=location.origin+"/redirect.html?c="+code;
+
+  const db=JSON.parse(localStorage.getItem("shortify_links")||"{}");
+  db[code]=url;
+  localStorage.setItem("shortify_links",JSON.stringify(db));
+
+  document.getElementById("shortUrl").value=short;
+  document.getElementById("shortLinkDiv").style.display="block";
+
+  document.getElementById("qrSection").style.display="block";
+  QRCode.toCanvas(document.getElementById("qrcode"), short, {width:200});
+};
+
+copyBtn.onclick=()=>{
+  shortUrl.select();
+  document.execCommand("copy");
+  alert("Copied!");
+};
+</script>
+</body>
+</html>

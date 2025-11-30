@@ -1,0 +1,22 @@
+{
+  "ads": [
+    {
+      "type": "link",
+      "url": "https://affiliate-program.amazon.com/",
+      "text": "💥 Visit Amazon Ad Center"
+    },
+    {
+      "type": "link",
+      "url": "https://ads.google.com",
+      "text": "👉 Check Google Ads Offer"
+    },
+    {
+      "type": "html",
+      "html": "<iframe src='https://some-ad-provider.com/ad.html' width='300' height='250'></iframe>"
+    },
+    {
+      "type": "html",
+      "html": "<div style='background:#eee;padding:10px;'>Custom HTML Ad Here</div>"
+    }
+  ]
+}

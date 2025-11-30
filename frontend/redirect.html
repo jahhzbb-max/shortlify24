@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redirecting...</title>
+
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:#0d0f1a;
+  color:#fff;
+  text-align:center;
+  padding:40px;
+}
+
+.box{
+  background:rgba(255,255,255,0.1);
+  backdrop-filter:blur(18px);
+  padding:35px;
+  border-radius:20px;
+  width:90%;
+  max-width:500px;
+  margin:auto;
+  margin-top:60px;
+}
+#countdown{font-size:3rem;margin-bottom:10px;}
+
+.ad{
+  background:rgba(255,255,255,0.15);
+  padding:15px;
+  margin-top:12px;
+  border-radius:12px;
+}
+#adFrame iframe{width:100%;height:180px;border-radius:12px;}
+#goBtn{
+  margin-top:20px;
+  padding:12px 22px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  background:#5b72ff;
+  color:#fff;
+  font-size:1rem;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Redirecting in</h2>
+  <div id="countdown">10</div>
+
+  <div id="adsContainer"></div>
+
+  <button id="goBtn">Go to Link Now</button>
+</div>
+
+<script>
+const urlParams=new URLSearchParams(location.search);
+const code=urlParams.get("c");
+
+const db=JSON.parse(localStorage.getItem("shortify_links")||"{}");
+const finalURL=db[code];
+
+if(!finalURL){
+  document.body.innerHTML="<h2>Invalid or Deleted Link</h2>";
+}
+
+/* Countdown */
+let sec=10;
+let timer=setInterval(()=>{
+  countdown.innerText=sec;
+  if(sec--<=0){
+    clearInterval(timer);
+    goBtn.style.display="inline-block";
+  }
+},1000);
+
+/* Load Ads */
+fetch("assets/ads.json")
+  .then(r=>r.json())
+  .then(data=>{
+    data.ads.forEach(ad=>{
+      let div=document.createElement("div");
+      div.className="ad";
+
+      if(ad.includes("<iframe")||ad.includes("<script")){
+        div.innerHTML=ad;
+      } else if(ad.startsWith("http")){
+        div.innerHTML=`<a href="${ad}" target="_blank" style="color:#fff;">${ad}</a>`;
+      } else {
+        div.innerHTML=ad;
+      }
+
+      adsContainer.appendChild(div);
+    });
+  });
+
+goBtn.onclick=()=>{
+  window.open(finalURL,"_blank");
+
+  fetch("assets/ads.json")
+    .then(r=>r.json())
+    .then(j=>{
+      const first=j.ads.find(a=>a.startsWith("http"));
+      if(first) location.href=first;
+    });
+};
+</script>
+
+</body>
+</html>
