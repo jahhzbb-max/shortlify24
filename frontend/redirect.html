@@ -6,7 +6,6 @@
 <title>Redirecting...</title>
 
 <style>
-/* ------------------ GLOBAL ------------------ */
 body {
   margin: 0;
   font-family: "Poppins", sans-serif;
@@ -29,17 +28,11 @@ body {
 }
 
 @keyframes floatUp {
-  0% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-200px) scale(1.5);
-    opacity: 0;
-  }
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-200px) scale(1.5); opacity: 0; }
 }
 
-/* ------------------ BOX ------------------ */
+/* Main Box */
 .box {
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(18px);
@@ -54,17 +47,10 @@ body {
 }
 
 @keyframes fadeSlide {
-  0% {
-    transform: translateY(40px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  0% { transform: translateY(40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
 }
 
-/* Countdown */
 #countdown {
   font-size: 3.8rem;
   margin-bottom: 10px;
@@ -73,7 +59,6 @@ body {
   text-shadow: 0 0 12px rgba(120, 132, 255, 0.6);
 }
 
-/* Ads */
 .ad {
   background: rgba(255, 255, 255, 0.18);
   padding: 16px;
@@ -83,7 +68,6 @@ body {
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
-/* Buttons */
 button {
   margin-top: 20px;
   padding: 13px 24px;
@@ -93,35 +77,20 @@ button {
   background: #6c7bff;
   color: #fff;
   font-size: 1rem;
-  display: inline-block;
 }
 
 #goBtn {
   display: none;
 }
 
-.copyBtn {
-  background: #00c27a;
-  margin-left: 10px;
-}
-
-.shareBtn {
-  background: #ff6f3c;
-}
-
-/* Link Preview */
-#finalLink {
-  margin-top: 12px;
-  font-size: 0.9rem;
-  color: #d0d4ff;
-  word-break: break-all;
-}
+.copyBtn { background: #00c27a; margin-left: 10px; }
+.shareBtn { background: #ff6f3c; }
+#finalLink { margin-top: 12px; font-size: 0.9rem; color: #d0d4ff; word-break: break-all; }
 </style>
 </head>
 
 <body>
 
-<!-- Floating Particles -->
 <script>
 for (let i = 0; i < 30; i++) {
   let p = document.createElement("div");
@@ -152,63 +121,65 @@ for (let i = 0; i < 30; i++) {
 // Backend base URL
 const BACKEND = "https://shortlify24.onrender.com";
 
-// Read ?id=xyz
-const params = new URLSearchParams(location.search);
-const id = params.get("id");
+// Query params
+const id = new URLSearchParams(location.search).get("id");
 
-// Initial setup
 let finalURL = null;
 const finalLinkDiv = document.getElementById("finalLink");
+const countdownDiv = document.getElementById("countdown");
 
-// Fetch URL From Backend
+// Fetch URL Info
 fetch(`${BACKEND}/api/info/${id}`)
   .then(r => r.json())
   .then(data => {
-     if (data.originalUrl) {
-        finalURL = data.originalUrl;
-        finalLinkDiv.textContent = finalURL;
-     } else {
-        finalLinkDiv.textContent = "Invalid or Deleted Link";
-     }
+    if (data.originalUrl) {
+      finalURL = data.originalUrl;
+      finalLinkDiv.textContent = finalURL;
+    } else {
+      finalLinkDiv.textContent = "Invalid or Expired Link";
+      clearInterval(timer);
+      countdownDiv.textContent = "❌";
+    }
+  })
+  .catch(() => {
+    finalLinkDiv.textContent = "Error loading link!";
   });
 
-// Countdown Logic
+// Countdown
 let sec = 10;
 let timer = setInterval(() => {
-  countdown.innerText = sec;
+  countdownDiv.innerText = sec;
   if (sec-- <= 0) {
     clearInterval(timer);
-    goBtn.style.display = "inline-block";
+    document.getElementById("goBtn").style.display = "inline-block";
   }
 }, 1000);
 
 // Load Ads
-fetch("assets/ads.json")
-  .then(r=>r.json())
-  .then(data=>{
-    data.ads.forEach(ad=>{
-      let div=document.createElement("div");
-      div.className="ad";
+fetch("./assets/ads.json")
+  .then(r => r.json())
+  .then(data => {
+    data.ads.forEach(ad => {
+      let div = document.createElement("div");
+      div.className = "ad";
       div.innerHTML = ad;
       adsContainer.appendChild(div);
     });
   });
-
 
 // Redirect
 goBtn.onclick = () => {
   if (finalURL) location.href = finalURL;
 };
 
-
-// Copy Button
+// Copy URL
 copyBtn.onclick = () => {
-  navigator.clipboard.writeText(finalURL);
+  navigator.clipboard.writeText(finalURL || "No URL");
   copyBtn.textContent = "Copied!";
-  setTimeout(()=>copyBtn.textContent="Copy URL",1500);
+  setTimeout(() => copyBtn.textContent = "Copy URL", 1500);
 };
 
-// Share Button
+// Share URL
 shareBtn.onclick = async () => {
   if (navigator.share) {
     await navigator.share({

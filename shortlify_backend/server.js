@@ -8,44 +8,50 @@ const Url = require('./models/Url');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+/* ===================================================
+   MIDDLEWARE
+=================================================== */
 app.use(express.json());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
-  methods: ['GET','POST','PUT','DELETE']
+  origin: [
+    process.env.FRONTEND_URL,         // Netlify Frontend
+    process.env.BASE_URL              // Backend URL (Render)
+  ],
+  methods: ['GET', 'POST'],
 }));
 
-// Health Check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-/* ==========================================
-   CREATE SHORT URL
-========================================== */
+
+/* ===================================================
+   ✅ CREATE SHORT URL
+=================================================== */
 app.post('/api/shorten', async (req, res) => {
   try {
     const { originalUrl } = req.body;
 
-    if (!originalUrl) {
+    if (!originalUrl)
       return res.status(400).json({ error: 'originalUrl is required' });
-    }
 
-    // URL validation
+    // Validate URL format
     try { new URL(originalUrl); }
-    catch(e) {
+    catch (e) {
       return res.status(400).json({ error: 'invalid URL' });
     }
 
-    const shortId = nanoid(7);
+    const shortId = nanoid(8);
 
     const entry = new Url({
       shortId,
       originalUrl,
-      clicks: 0
+      clicks: 0,
+      createdAt: new Date()
     });
 
     await entry.save();
 
-    const base = process.env.BASE_URL || ('http://localhost:' + PORT);
+    const base = process.env.BASE_URL || `http://localhost:${PORT}`;
+
     return res.json({
       shortId,
       shortUrl: `${base}/r/${shortId}`
@@ -58,10 +64,10 @@ app.post('/api/shorten', async (req, res) => {
 });
 
 
-/* ==========================================
-   🔍 GET URL INFO (for frontend redirect page)
-   /api/info/:shortId
-========================================== */
+/* ===================================================
+   ✅ FETCH URL INFO FOR REDIRECT PAGE
+   Example: /api/info/abc123
+=================================================== */
 app.get('/api/info/:shortId', async (req, res) => {
   try {
     const { shortId } = req.params;
@@ -85,13 +91,14 @@ app.get('/api/info/:shortId', async (req, res) => {
 });
 
 
-/* ==========================================
-   REDIRECT TO ORIGINAL URL
-   /r/:shortId
-========================================== */
+/* ===================================================
+   ✅ REDIRECT SHORT URL → ORIGINAL URL
+   Example: /r/abc123
+=================================================== */
 app.get('/r/:shortId', async (req, res) => {
   try {
     const { shortId } = req.params;
+
     const entry = await Url.findOne({ shortId });
 
     if (!entry) return res.status(404).send('Not found');
@@ -108,14 +115,14 @@ app.get('/r/:shortId', async (req, res) => {
 });
 
 
-/* ==========================================
-   CONNECT DATABASE & START SERVER
-========================================== */
-mongoose.connect(process.env.MONGO_URL, {})
+/* ===================================================
+   🔌 CONNECT DATABASE & START SERVER
+=================================================== */
+mongoose.connect(process.env.MONGO_URL)
   .then(() => {
-    console.log('MongoDB connected');
+    console.log('MongoDB connected ✔');
     app.listen(PORT, () => {
-      console.log('Server running on port', PORT);
+      console.log(`Server running on port ${PORT}`);
     });
   })
   .catch(err => {
