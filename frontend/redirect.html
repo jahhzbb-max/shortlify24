@@ -15,90 +15,50 @@ body {
   padding: 40px;
   overflow-x: hidden;
 }
-
-/* Floating Particles */
 .particle {
   position: absolute;
-  width: 6px;
-  height: 6px;
-  background: rgba(120, 132, 255, 0.7);
+  width: 6px; height: 6px;
+  background: rgba(120,132,255,0.7);
   border-radius: 50%;
   animation: floatUp 6s linear infinite;
-  filter: blur(1px);
 }
-
 @keyframes floatUp {
-  0% { transform: translateY(0) scale(1); opacity: 1; }
-  100% { transform: translateY(-200px) scale(1.5); opacity: 0; }
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-200px); opacity: 0; }
 }
-
-/* Main Box */
 .box {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255,255,255,0.12);
   backdrop-filter: blur(18px);
   padding: 40px;
   border-radius: 22px;
-  width: 90%;
-  max-width: 520px;
-  margin: auto;
-  margin-top: 60px;
-  box-shadow: 0 0 25px rgba(120, 132, 255, 0.25);
-  animation: fadeSlide 1.2s ease-out;
+  width: 90%; max-width: 520px;
+  margin: 60px auto;
+  box-shadow: 0 0 25px rgba(120,132,255,0.25);
 }
-
-@keyframes fadeSlide {
-  0% { transform: translateY(40px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
-}
-
-#countdown {
-  font-size: 3.8rem;
-  margin-bottom: 10px;
-  font-weight: 700;
-  color: #6e82ff;
-  text-shadow: 0 0 12px rgba(120, 132, 255, 0.6);
-}
-
-.ad {
-  background: rgba(255, 255, 255, 0.18);
-  padding: 16px;
-  margin-top: 14px;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-}
-
+#countdown { font-size: 3.8rem; margin-bottom: 10px; color: #6e82ff; }
 button {
   margin-top: 20px;
-  padding: 13px 24px;
+  padding: 14px 24px;
   border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  background: #6c7bff;
-  color: #fff;
-  font-size: 1rem;
+  border: none; cursor: pointer;
+  background: #6c7bff; color: #fff; font-size: 1rem;
 }
-
-#goBtn {
-  display: none;
-}
-
-.copyBtn { background: #00c27a; margin-left: 10px; }
-.shareBtn { background: #ff6f3c; }
-#finalLink { margin-top: 12px; font-size: 0.9rem; color: #d0d4ff; word-break: break-all; }
+#goBtn { display: none; }
+.copyBtn { background: #00c27a; }
+.shareBtn { background: #ff6f3c; margin-left: 10px; }
+#finalLink { margin-top: 12px; color: #d0d4ff; word-break: break-all; }
 </style>
 </head>
 
 <body>
 
 <script>
+// floating particles
 for (let i = 0; i < 30; i++) {
   let p = document.createElement("div");
   p.className = "particle";
   p.style.left = Math.random() * window.innerWidth + "px";
   p.style.top = Math.random() * window.innerHeight + "px";
-  p.style.animationDuration = 4 + Math.random() * 4 + "s";
-  p.style.opacity = Math.random();
   document.body.appendChild(p);
 }
 </script>
@@ -110,25 +70,27 @@ for (let i = 0; i < 30; i++) {
   <b>Destination:</b>
   <div id="finalLink">Loading...</div>
 
-  <div id="adsContainer"></div>
-
-  <button id="goBtn">Go to Link</button>
+  <button id="goBtn">Get Link</button>
   <button class="copyBtn" id="copyBtn">Copy URL</button>
   <button class="shareBtn" id="shareBtn">Share</button>
 </div>
 
 <script>
-// Backend base URL
 const BACKEND = "https://shortlify24.onrender.com";
 
-// Query params
-const id = new URLSearchParams(location.search).get("id");
-
-let finalURL = null;
+// get all buttons
+const goBtn = document.getElementById("goBtn");
+const copyBtn = document.getElementById("copyBtn");
+const shareBtn = document.getElementById("shareBtn");
 const finalLinkDiv = document.getElementById("finalLink");
 const countdownDiv = document.getElementById("countdown");
 
-// Fetch URL Info
+// correct parameter (c)
+const id = new URLSearchParams(location.search).get("c");
+
+let finalURL = null;
+
+// Fetch original URL
 fetch(`${BACKEND}/api/info/${id}`)
   .then(r => r.json())
   .then(data => {
@@ -137,13 +99,9 @@ fetch(`${BACKEND}/api/info/${id}`)
       finalLinkDiv.textContent = finalURL;
     } else {
       finalLinkDiv.textContent = "Invalid or Expired Link";
-      clearInterval(timer);
-      countdownDiv.textContent = "❌";
     }
   })
-  .catch(() => {
-    finalLinkDiv.textContent = "Error loading link!";
-  });
+  .catch(() => finalLinkDiv.textContent = "Error loading link!");
 
 // Countdown
 let sec = 10;
@@ -151,44 +109,34 @@ let timer = setInterval(() => {
   countdownDiv.innerText = sec;
   if (sec-- <= 0) {
     clearInterval(timer);
-    document.getElementById("goBtn").style.display = "inline-block";
+    goBtn.style.display = "inline-block";
   }
 }, 1000);
 
-// Load Ads
-fetch("./assets/ads.json")
-  .then(r => r.json())
-  .then(data => {
-    data.ads.forEach(ad => {
-      let div = document.createElement("div");
-      div.className = "ad";
-      div.innerHTML = ad;
-      adsContainer.appendChild(div);
-    });
-  });
-
-// Redirect
+// Go button click → popup + ads
 goBtn.onclick = () => {
-  if (finalURL) location.href = finalURL;
+  if (!finalURL) return;
+
+  // Open final URL in popup tab
+  window.open(finalURL, "_blank");
+
+  // ads/video in current tab
+  location.href = "ads/video.html";
 };
 
-// Copy URL
+// Copy
 copyBtn.onclick = () => {
-  navigator.clipboard.writeText(finalURL || "No URL");
+  navigator.clipboard.writeText(finalURL || "");
   copyBtn.textContent = "Copied!";
   setTimeout(() => copyBtn.textContent = "Copy URL", 1500);
 };
 
-// Share URL
-shareBtn.onclick = async () => {
+// Share
+shareBtn.onclick = () => {
   if (navigator.share) {
-    await navigator.share({
-      title: "Shortened Link",
-      text: "Check this link:",
-      url: finalURL
-    });
+    navigator.share({ title: "Shortened Link", url: finalURL });
   } else {
-    alert("Sharing not supported on this browser.");
+    alert("Sharing not supported");
   }
 };
 </script>

@@ -1,131 +1,96 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const { nanoid } = require('nanoid');
-const Url = require('./models/Url');
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-
-/* ===================================================
-   MIDDLEWARE
-=================================================== */
 app.use(express.json());
-app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL,         // Netlify Frontend
-    process.env.BASE_URL              // Backend URL (Render)
-  ],
-  methods: ['GET', 'POST'],
-}));
+app.use(cors());
 
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+// -----------------------------
+// 🔵 CONNECT MONGODB
+// -----------------------------
+mongoose
+  .connect(
+    "mongodb+srv://jahhzbb_db_user:0pAyIXj6kdxFAaih@cluster0.matlruh.mongodb.net/shortlify?retryWrites=true&w=majority&appName=Cluster0",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.log("❌ DB Error:", err));
 
+// -----------------------------
+// 🟣 MONGOOSE SCHEMA
+// -----------------------------
+const ShortUrlSchema = new mongoose.Schema({
+  shortId: String,
+  originalUrl: String,
+  clicks: { type: Number, default: 0 },
+});
 
-/* ===================================================
-   ✅ CREATE SHORT URL
-=================================================== */
-app.post('/api/shorten', async (req, res) => {
+const ShortUrl = mongoose.model("ShortUrl", ShortUrlSchema);
+
+// -----------------------------
+// 🟢 CREATE SHORT URL
+// -----------------------------
+app.post("/api/shorten", async (req, res) => {
   try {
-    const { originalUrl } = req.body;
+    const { url } = req.body;
 
-    if (!originalUrl)
-      return res.status(400).json({ error: 'originalUrl is required' });
-
-    // Validate URL format
-    try { new URL(originalUrl); }
-    catch (e) {
-      return res.status(400).json({ error: 'invalid URL' });
+    if (!url) {
+      return res.json({ status: "error", message: "URL is required" });
     }
 
-    const shortId = nanoid(8);
+    const id = Math.random().toString(36).substring(2, 8);
 
-    const entry = new Url({
-      shortId,
-      originalUrl,
-      clicks: 0,
-      createdAt: new Date()
+    await ShortUrl.create({
+      shortId: id,
+      originalUrl: url,
     });
-
-    await entry.save();
-
-    const base = process.env.BASE_URL || `http://localhost:${PORT}`;
 
     return res.json({
-      shortId,
-      shortUrl: `${base}/r/${shortId}`
+      status: "success",
+      shortUrl: id,
+      originalUrl: url,
     });
-
   } catch (err) {
-    console.error('Shorten Error:', err);
-    return res.status(500).json({ error: 'server error' });
+    return res.json({ status: "error", message: err.message });
   }
 });
 
+// -----------------------------
+// 🔵 REDIRECT PAGE INFO API
+// -----------------------------
+app.get("/api/info/:id", async (req, res) => {
+  const data = await ShortUrl.findOne({ shortId: req.params.id });
 
-/* ===================================================
-   ✅ FETCH URL INFO FOR REDIRECT PAGE
-   Example: /api/info/abc123
-=================================================== */
-app.get('/api/info/:shortId', async (req, res) => {
-  try {
-    const { shortId } = req.params;
-
-    const entry = await Url.findOne({ shortId });
-
-    if (!entry) {
-      return res.json({ error: 'not found' });
-    }
-
-    return res.json({
-      shortId: entry.shortId,
-      originalUrl: entry.originalUrl,
-      clicks: entry.clicks
-    });
-
-  } catch (err) {
-    console.error('Info Error:', err);
-    return res.status(500).json({ error: 'server error' });
+  if (!data) {
+    return res.json({ originalUrl: null });
   }
-});
 
-
-/* ===================================================
-   ✅ REDIRECT SHORT URL → ORIGINAL URL
-   Example: /r/abc123
-=================================================== */
-app.get('/r/:shortId', async (req, res) => {
-  try {
-    const { shortId } = req.params;
-
-    const entry = await Url.findOne({ shortId });
-
-    if (!entry) return res.status(404).send('Not found');
-
-    entry.clicks = (entry.clicks || 0) + 1;
-    await entry.save();
-
-    return res.redirect(entry.originalUrl);
-
-  } catch (err) {
-    console.error('Redirect Error:', err);
-    return res.status(500).send('Server error');
-  }
-});
-
-
-/* ===================================================
-   🔌 CONNECT DATABASE & START SERVER
-=================================================== */
-mongoose.connect(process.env.MONGO_URL)
-  .then(() => {
-    console.log('MongoDB connected ✔');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
+  return res.json({
+    originalUrl: data.originalUrl,
   });
+});
+
+// -----------------------------
+// 🔴 FINAL REDIRECT
+// -----------------------------
+app.get("/:id", async (req, res) => {
+  const data = await ShortUrl.findOne({ shortId: req.params.id });
+
+  if (!data) {
+    return res.send("❌ Invalid Short URL");
+  }
+
+  data.clicks++;
+  await data.save();
+
+  return res.redirect(data.originalUrl);
+});
+
+// -----------------------------
+// 🟢 START SERVER
+// -----------------------------
+app.listen(3000, () => console.log("🚀 Server running on port 3000"));
