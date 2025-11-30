@@ -78,21 +78,21 @@ for (let i = 0; i < 30; i++) {
 <script>
 const BACKEND = "https://shortlify24.onrender.com";
 
-// get all buttons
+// elements
 const goBtn = document.getElementById("goBtn");
 const copyBtn = document.getElementById("copyBtn");
 const shareBtn = document.getElementById("shareBtn");
 const finalLinkDiv = document.getElementById("finalLink");
 const countdownDiv = document.getElementById("countdown");
 
-// correct parameter (c)
+// read param c
 const id = new URLSearchParams(location.search).get("c");
 
 let finalURL = null;
 
-// Fetch original URL
+// fetch original URL
 fetch(`${BACKEND}/api/info/${id}`)
-  .then(r => r.json())
+  .then(res => res.json())
   .then(data => {
     if (data.originalUrl) {
       finalURL = data.originalUrl;
@@ -103,7 +103,7 @@ fetch(`${BACKEND}/api/info/${id}`)
   })
   .catch(() => finalLinkDiv.textContent = "Error loading link!");
 
-// Countdown
+// countdown
 let sec = 10;
 let timer = setInterval(() => {
   countdownDiv.innerText = sec;
@@ -113,25 +113,25 @@ let timer = setInterval(() => {
   }
 }, 1000);
 
-// Go button click → popup + ads
+// Get Link → popup + ads
 goBtn.onclick = () => {
   if (!finalURL) return;
 
-  // Open final URL in popup tab
+  // open main link in popup
   window.open(finalURL, "_blank");
 
-  // ads/video in current tab
-  location.href = "ads/video.html";
+  // ads page in same tab
+  location.href = "/ads/video.html";
 };
 
-// Copy
+// copy button
 copyBtn.onclick = () => {
   navigator.clipboard.writeText(finalURL || "");
   copyBtn.textContent = "Copied!";
-  setTimeout(() => copyBtn.textContent = "Copy URL", 1500);
+  setTimeout(() => (copyBtn.textContent = "Copy URL"), 1500);
 };
 
-// Share
+// share button
 shareBtn.onclick = () => {
   if (navigator.share) {
     navigator.share({ title: "Shortened Link", url: finalURL });

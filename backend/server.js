@@ -1,96 +1,143 @@
+// ---------------------------
+// Shortlify24 – Backend Server
+// Fully Working + Debug Logs
+// ---------------------------
+
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import dotenv from "dotenv";
+import crypto from "crypto";
 
+dotenv.config();
 const app = express();
-app.use(express.json());
+
+// MIDDLEWARE
 app.use(cors());
+app.use(express.json());
 
-// -----------------------------
-// 🔵 CONNECT MONGODB
-// -----------------------------
+// DEBUG LOG
+console.log("🚀 Server starting...");
+
+// ---------------------------
+// MONGODB CONNECTION
+// ---------------------------
 mongoose
-  .connect(
-    "mongodb+srv://jahhzbb_db_user:0pAyIXj6kdxFAaih@cluster0.matlruh.mongodb.net/shortlify?retryWrites=true&w=majority&appName=Cluster0",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log("❌ DB Error:", err));
+  .connect(process.env.MONGO_URI, { dbName: "shortlify24" })
+  .then(() => console.log("✅ MongoDB Connected Successfully"))
+  .catch((err) => console.error("❌ MongoDB Error:", err));
 
-// -----------------------------
-// 🟣 MONGOOSE SCHEMA
-// -----------------------------
-const ShortUrlSchema = new mongoose.Schema({
-  shortId: String,
-  originalUrl: String,
+// ---------------------------
+// URL SCHEMA
+// ---------------------------
+const urlSchema = new mongoose.Schema({
+  shortId: { type: String, required: true, unique: true },
+  originalUrl: { type: String, required: true },
   clicks: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now },
+  expireAt: { type: Date, default: null },
 });
 
-const ShortUrl = mongoose.model("ShortUrl", ShortUrlSchema);
+const ShortURL = mongoose.model("ShortURL", urlSchema);
 
-// -----------------------------
-// 🟢 CREATE SHORT URL
-// -----------------------------
-app.post("/api/shorten", async (req, res) => {
+// ---------------------------
+// Helper: Generate Short ID
+// ---------------------------
+function generateShortId() {
+  return crypto.randomBytes(4).toString("hex"); // 8 character ID
+}
+
+// ---------------------------
+// API: Home Test
+// ---------------------------
+app.get("/", (req, res) => {
+  console.log("📩 GET / called");
+  res.json({ success: true, message: "Shortlify24 Backend Running" });
+});
+
+// ---------------------------
+// API: Create Short URL
+// ---------------------------
+app.post("/create", async (req, res) => {
   try {
-    const { url } = req.body;
+    console.log("📩 POST /create:", req.body);
 
-    if (!url) {
-      return res.json({ status: "error", message: "URL is required" });
+    const { originalUrl, expireHours } = req.body;
+    if (!originalUrl) {
+      console.log("❌ Error: No URL provided");
+      return res.status(400).json({ error: "URL is required" });
     }
 
-    const id = Math.random().toString(36).substring(2, 8);
+    const shortId = generateShortId();
 
-    await ShortUrl.create({
-      shortId: id,
-      originalUrl: url,
+    let expireTime = null;
+    if (expireHours) {
+      expireTime = new Date(Date.now() + expireHours * 60 * 60 * 1000);
+      console.log("⏳ Expire set to:", expireTime);
+    }
+
+    await ShortURL.create({
+      shortId,
+      originalUrl,
+      expireAt: expireTime,
     });
 
-    return res.json({
-      status: "success",
-      shortUrl: id,
-      originalUrl: url,
+    console.log("✅ URL SHORTENED:", shortId);
+
+    res.json({
+      success: true,
+      shortId,
+      shortUrl: `${process.env.DOMAIN}/${shortId}`,
     });
   } catch (err) {
-    return res.json({ status: "error", message: err.message });
+    console.error("❌ Create Error:", err);
+    res.status(500).json({ error: "Server Error" });
   }
 });
 
-// -----------------------------
-// 🔵 REDIRECT PAGE INFO API
-// -----------------------------
-app.get("/api/info/:id", async (req, res) => {
-  const data = await ShortUrl.findOne({ shortId: req.params.id });
+// ---------------------------
+// API: Redirect Handler
+// ---------------------------
+app.get("/:shortId", async (req, res) => {
+  try {
+    const { shortId } = req.params;
+    console.log("📩 REDIRECT REQUEST:", shortId);
 
-  if (!data) {
-    return res.json({ originalUrl: null });
+    const urlDoc = await ShortURL.findOne({ shortId });
+    if (!urlDoc) {
+      console.log("❌ Invalid Link");
+      return res.status(404).json({
+        error: "Invalid or Expired Link",
+        message: "This URL does not exist",
+      });
+    }
+
+    // Check Expiry
+    if (urlDoc.expireAt && new Date() > urlDoc.expireAt) {
+      console.log("⏳ EXPIRED:", urlDoc.shortId);
+      return res.status(410).json({
+        error: "Expired Link",
+        message: "This URL has expired.",
+      });
+    }
+
+    // Count Click
+    urlDoc.clicks += 1;
+    await urlDoc.save();
+
+    console.log(`🔗 Redirecting → ${urlDoc.originalUrl}`);
+
+    return res.redirect(urlDoc.originalUrl);
+  } catch (err) {
+    console.error("❌ Redirect Error:", err);
+    res.status(500).json({ error: "Server Error" });
   }
-
-  return res.json({
-    originalUrl: data.originalUrl,
-  });
 });
 
-// -----------------------------
-// 🔴 FINAL REDIRECT
-// -----------------------------
-app.get("/:id", async (req, res) => {
-  const data = await ShortUrl.findOne({ shortId: req.params.id });
-
-  if (!data) {
-    return res.send("❌ Invalid Short URL");
-  }
-
-  data.clicks++;
-  await data.save();
-
-  return res.redirect(data.originalUrl);
-});
-
-// -----------------------------
-// 🟢 START SERVER
-// -----------------------------
-app.listen(3000, () => console.log("🚀 Server running on port 3000"));
+// ---------------------------
+// SERVER START
+// ---------------------------
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () =>
+  console.log(`🚀 Server Live on PORT: ${PORT}`)
+);
