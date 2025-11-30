@@ -78,32 +78,33 @@ for (let i = 0; i < 30; i++) {
 <script>
 const BACKEND = "https://shortlify24.onrender.com";
 
-// elements
+// DOM elements
 const goBtn = document.getElementById("goBtn");
 const copyBtn = document.getElementById("copyBtn");
 const shareBtn = document.getElementById("shareBtn");
 const finalLinkDiv = document.getElementById("finalLink");
 const countdownDiv = document.getElementById("countdown");
 
-// read param c
-const id = new URLSearchParams(location.search).get("c");
+// GET shortId from URL path → /r/ab12cd
+const path = window.location.pathname.split("/");
+const id = path[path.length - 1];
 
 let finalURL = null;
 
-// fetch original URL
-fetch(`${BACKEND}/api/info/${id}`)
+// Fetch original URL
+fetch(`${BACKEND}/info/${id}`)
   .then(res => res.json())
   .then(data => {
-    if (data.originalUrl) {
+    if (data.success && data.originalUrl) {
       finalURL = data.originalUrl;
       finalLinkDiv.textContent = finalURL;
     } else {
       finalLinkDiv.textContent = "Invalid or Expired Link";
     }
   })
-  .catch(() => finalLinkDiv.textContent = "Error loading link!");
+  .catch(() => (finalLinkDiv.textContent = "Error loading link!"));
 
-// countdown
+// Countdown
 let sec = 10;
 let timer = setInterval(() => {
   countdownDiv.innerText = sec;
@@ -113,25 +114,22 @@ let timer = setInterval(() => {
   }
 }, 1000);
 
-// Get Link → popup + ads
+// Get Link (Go button)
 goBtn.onclick = () => {
   if (!finalURL) return;
 
-  // open main link in popup
-  window.open(finalURL, "_blank");
-
-  // ads page in same tab
-  location.href = "/ads/video.html";
+  window.open(finalURL, "_blank");  // open real link
+  location.href = "/ads/video.html"; // ads page
 };
 
-// copy button
+// Copy Button
 copyBtn.onclick = () => {
   navigator.clipboard.writeText(finalURL || "");
   copyBtn.textContent = "Copied!";
   setTimeout(() => (copyBtn.textContent = "Copy URL"), 1500);
 };
 
-// share button
+// Share Button
 shareBtn.onclick = () => {
   if (navigator.share) {
     navigator.share({ title: "Shortened Link", url: finalURL });
