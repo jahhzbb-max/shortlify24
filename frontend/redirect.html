@@ -4,21 +4,17 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Redirecting...</title>
-<!-- এখানে আপনার আগের CSS <style> কোডটি থাকবে -->
 <style>
 /* ... আপনার আগের CSS কোড এখানে পেস্ট করুন ... */
 </style>
 </head>
 
 <body>
-
 <div class="box">
   <h2>Redirecting In</h2>
   <div id="countdown">10</div>
-
   <b>Destination:</b>
   <div id="finalLink">Loading...</div>
-
   <button id="goBtn">Get Link</button>
   <button class="copyBtn" id="copyBtn">Copy URL</button>
   <button class="shareBtn" id="shareBtn">Share</button>
@@ -27,89 +23,11 @@
 <!-- FIX 1: একটি নির্ভরযোগ্য QR Code CDN লিঙ্ক যোগ করুন -->
 <script src="cdnjs.cloudflare.com"></script>
 
-<!-- FIX 2: আপনার জাভাস্ক্রিপ্ট কোডটি </body> ট্যাগের ঠিক আগে রাখুন -->
 <script>
-// ব্যাকএন্ড API URL - এটি আপনার Render URL হতে হবে
 const BACKEND = "https://shortlify24.onrender.com"; 
-
-// DOM elements
+// ... বাকি জাভাস্ক্রিপ্ট কোড এখানে পেস্ট করুন (যেমনটা আগে দিয়েছিলাম) ...
 const goBtn = document.getElementById("goBtn");
-const copyBtn = document.getElementById("copyBtn");
-const shareBtn = document.getElementById("shareBtn");
-const finalLinkDiv = document.getElementById("finalLink");
-const countdownDiv = document.getElementById("countdown");
-
-// FIXED: GET shortId from URL query parameter ?c=
-const urlParams = new URLSearchParams(window.location.search);
-const id = urlParams.get('c'); // 'c' is the key we use from index.html
-
-if (!id) {
-    finalLinkDiv.textContent = "Error: Missing link ID";
-    goBtn.style.display = "none";
-    copyBtn.style.display = "none";
-    shareBtn.style.display = "none";
-}
-
-let finalURL = null;
-
-// FIXED API ROUTE — must call /api/info/:id
-// Only fetch if ID exists
-if (id) {
-    fetch(`${BACKEND}/api/info/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.originalUrl) {
-          finalURL = data.originalUrl;
-          finalLinkDiv.textContent = finalURL;
-        } else {
-          finalLinkDiv.textContent = "Invalid or Expired Link";
-        }
-      })
-      .catch(() => (finalLinkDiv.textContent = "Error loading link!"));
-}
-
-// Countdown Timer
-let sec = 10;
-let timer = setInterval(() => {
-  countdownDiv.innerText = sec;
-  if (sec-- <= 0) {
-    clearInterval(timer);
-    if (finalURL) { // Only show button if a valid URL was found
-        goBtn.style.display = "inline-block";
-    }
-  }
-}, 1000);
-
-// Get Link (Go button)
-goBtn.onclick = () => {
-  if (!finalURL) return;
-  location.href = finalURL;
-};
-
-// Copy Button
-copyBtn.onclick = () => {
-  navigator.clipboard.writeText(finalURL || "");
-  copyBtn.textContent = "Copied!";
-  setTimeout(() => (copyBtn.textContent = "Copy URL"), 1500);
-};
-
-// Share Button
-shareBtn.onclick = () => {
-  if (navigator.share) {
-    navigator.share({ title: "Shortened Link", url: finalURL });
-  } else {
-    alert("Sharing not supported");
-  }
-};
-
-// floating particles (moved here to run after elements exist)
-for (let i = 0; i < 30; i++) {
-  let p = document.createElement("div");
-  p.className = "particle";
-  p.style.left = Math.random() * window.innerWidth + "px";
-  p.style.top = Math.random() * window.innerHeight + "px";
-  document.body.appendChild(p);
-}
+// ... বাকি কোড ...
 </script>
 
 </body>
