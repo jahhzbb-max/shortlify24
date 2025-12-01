@@ -1,193 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shortlify24 - Premium URL Shortener</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Redirecting...</title>
 
 <style>
-/* ---------------------------------------------------
-   PREMIUM MODERN GLASS UI
---------------------------------------------------- */
-:root {
-  --primary: #5b72ff;
-  --primary-dark: #4253d8;
-  --bg-light: #eef1ff;
-  --bg-dark: #0d0f1a;
-  --glass-light: rgba(255,255,255,0.45);
-  --glass-dark: rgba(0,0,0,0.45);
-  --text-light: #0f0f0f;
-  --text-dark: #f3f3f3;
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(135deg, #0d0f1a 0%, #131727 100%);
+  color: #fff;
+  text-align: center;
+  padding: 40px;
+  overflow-x: hidden;
 }
-
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-
-body.light{background:var(--bg-light);color:var(--text-light);}
-body.dark{background:var(--bg-dark);color:var(--text-dark);}
-
-.glass-card{
-  background:var(--glass-light);
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-  border-radius:20px;
-  padding:40px;
-  box-shadow:0 8px 30px rgba(0,0,0,0.1);
+.particle {
+  position: absolute;
+  width: 6px; height: 6px;
+  background: rgba(120,132,255,0.7);
+  border-radius: 50%;
+  animation: floatUp 6s linear infinite;
 }
-body.dark .glass-card{
-  background:var(--glass-dark);
+@keyframes floatUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-200px); opacity: 0; }
 }
-
-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:20px 25px;
+.box {
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(18px);
+  padding: 40px;
+  border-radius: 22px;
+  width: 90%; max-width: 520px;
+  margin: 60px auto;
+  box-shadow: 0 0 25px rgba(120,132,255,0.25);
 }
-.toggle-btn{
-  padding:10px 18px;
-  background:var(--primary);
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  transition:0.3s;
+#countdown { font-size: 3.8rem; margin-bottom: 10px; color: #6e82ff; }
+button {
+  margin-top: 20px;
+  padding: 14px 24px;
+  border-radius: 12px;
+  border: none; cursor: pointer;
+  background: #6c7bff; color: #fff; font-size: 1rem;
 }
-.toggle-btn:hover{background:var(--primary-dark);}
-
-.hero{
-  text-align:center;
-  margin-top:90px;
-  padding:20px;
-}
-.hero h1{
-  font-size:3rem;
-  font-weight:700;
-  margin-bottom:10px;
-}
-.hero p{opacity:.7;font-size:1.1rem;}
-
-.url-box{
-  margin-top:35px;
-  display:flex;
-  justify-content:center;
-  gap:15px;
-}
-.url-box input{
-  width:55%;
-  padding:15px;
-  border-radius:10px;
-  border:none;
-  font-size:1rem;
-  outline:none;
-}
-.url-box button{
-  padding:15px 25px;
-  background:var(--primary);
-  color:#fff;
-  border-radius:10px;
-  border:none;
-  cursor:pointer;
-  transition:.3s;
-}
-.url-box button:hover{background:var(--primary-dark);}
-
-.short-link{
-  text-align:center;
-  margin-top:25px;
-  display:none;
-}
-.short-link input{
-  width:60%;
-  padding:12px;
-  border-radius:10px;
-  outline:none;
-  border:none;
-  font-size:1rem;
-}
-.short-link button{
-  padding:12px 20px;
-  margin-left:10px;
-  background:var(--primary);
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-  color:#fff;
-}
-.qr-section{text-align:center;margin-top:30px;display:none;}
+#goBtn { display: none; }
+.copyBtn { background: #00c27a; }
+.shareBtn { background: #ff6f3c; margin-left: 10px; }
+#finalLink { margin-top: 12px; color: #d0d4ff; word-break: break-all; }
 </style>
 </head>
 
-<body class="light">
+<body>
 
-<header>
-  <h2>Shortlify24</h2>
-  <button class="toggle-btn">Dark Mode</button>
-</header>
+<div class="box">
+  <h2>Redirecting In</h2>
+  <div id="countdown">10</div>
 
-<div class="hero">
-  <div class="glass-card">
-    <h1>Premium URL Shortening</h1>
-    <p>Fast, Secure, Modern — Shorten your links instantly.</p>
+  <b>Destination:</b>
+  <div id="finalLink">Loading...</div>
 
-    <div class="url-box">
-      <input type="text" id="longUrl" placeholder="Paste your long URL here...">
-      <button id="shortenBtn">Shorten</button>
-    </div>
-
-    <div class="short-link" id="shortLinkDiv">
-      <input id="shortUrl" readonly>
-      <button id="copyBtn">Copy</button>
-    </div>
-
-    <div class="qr-section" id="qrSection">
-      <h3>QR Code:</h3>
-      <canvas id="qrcode"></canvas>
-    </div>
-  </div>
+  <button id="goBtn">Get Link</button>
+  <button class="copyBtn" id="copyBtn">Copy URL</button>
+  <button class="shareBtn" id="shareBtn">Share</button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-<script>
-/* ---------- THEME ---------- */
-const toggleBtn=document.querySelector(".toggle-btn");
-toggleBtn.onclick=()=>{
-  document.body.classList.toggle("dark");
-  document.body.classList.toggle("light");
-  toggleBtn.innerText=document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
-};
+<!-- FIX 1: একটি নির্ভরযোগ্য QR Code CDN লিঙ্ক যোগ করুন -->
+<script src="cdnjs.cloudflare.com"></script>
 
-/* ---------- Shortener ---------- */
-function base62(n){
-  const chars="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  let s="";
-  while(n>0){s=chars[n%62]+s;n=Math.floor(n/62);}
-  return s||"0";
+<!-- FIX 2: আপনার জাভাস্ক্রিপ্ট কোডটি </body> ট্যাগের ঠিক আগে রাখুন -->
+<script>
+// ব্যাকএন্ড API URL - এটি আপনার Render URL হতে হবে
+const BACKEND = "https://shortlify24.onrender.com"; 
+
+// DOM elements
+const goBtn = document.getElementById("goBtn");
+const copyBtn = document.getElementById("copyBtn");
+const shareBtn = document.getElementById("shareBtn");
+const finalLinkDiv = document.getElementById("finalLink");
+const countdownDiv = document.getElementById("countdown");
+
+// FIXED: GET shortId from URL query parameter ?c=
+const urlParams = new URLSearchParams(window.location.search);
+const id = urlParams.get('c'); // 'c' is the key we use from index.html
+
+if (!id) {
+    finalLinkDiv.textContent = "Error: Missing link ID";
+    goBtn.style.display = "none";
+    copyBtn.style.display = "none";
+    shareBtn.style.display = "none";
 }
 
-const shortenBtn=document.getElementById("shortenBtn");
-shortenBtn.onclick=()=>{
-  const url=document.getElementById("longUrl").value.trim();
-  if(!url) return alert("Enter URL first!");
+let finalURL = null;
 
-  const code=base62(Date.now());
-  const short=location.origin+"/redirect.html?c="+code;
+// FIXED API ROUTE — must call /api/info/:id
+// Only fetch if ID exists
+if (id) {
+    fetch(`${BACKEND}/api/info/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.originalUrl) {
+          finalURL = data.originalUrl;
+          finalLinkDiv.textContent = finalURL;
+        } else {
+          finalLinkDiv.textContent = "Invalid or Expired Link";
+        }
+      })
+      .catch(() => (finalLinkDiv.textContent = "Error loading link!"));
+}
 
-  const db=JSON.parse(localStorage.getItem("shortify_links")||"{}");
-  db[code]=url;
-  localStorage.setItem("shortify_links",JSON.stringify(db));
+// Countdown Timer
+let sec = 10;
+let timer = setInterval(() => {
+  countdownDiv.innerText = sec;
+  if (sec-- <= 0) {
+    clearInterval(timer);
+    if (finalURL) { // Only show button if a valid URL was found
+        goBtn.style.display = "inline-block";
+    }
+  }
+}, 1000);
 
-  document.getElementById("shortUrl").value=short;
-  document.getElementById("shortLinkDiv").style.display="block";
-
-  document.getElementById("qrSection").style.display="block";
-  QRCode.toCanvas(document.getElementById("qrcode"), short, {width:200});
+// Get Link (Go button)
+goBtn.onclick = () => {
+  if (!finalURL) return;
+  location.href = finalURL;
 };
 
-copyBtn.onclick=()=>{
-  shortUrl.select();
-  document.execCommand("copy");
-  alert("Copied!");
+// Copy Button
+copyBtn.onclick = () => {
+  navigator.clipboard.writeText(finalURL || "");
+  copyBtn.textContent = "Copied!";
+  setTimeout(() => (copyBtn.textContent = "Copy URL"), 1500);
 };
+
+// Share Button
+shareBtn.onclick = () => {
+  if (navigator.share) {
+    navigator.share({ title: "Shortened Link", url: finalURL });
+  } else {
+    alert("Sharing not supported");
+  }
+};
+
+// floating particles (moved here to run after elements exist)
+for (let i = 0; i < 30; i++) {
+  let p = document.createElement("div");
+  p.className = "particle";
+  p.style.left = Math.random() * window.innerWidth + "px";
+  p.style.top = Math.random() * window.innerHeight + "px";
+  document.body.appendChild(p);
+}
 </script>
+
 </body>
 </html>

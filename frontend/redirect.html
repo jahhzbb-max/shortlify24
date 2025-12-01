@@ -4,64 +4,13 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Redirecting...</title>
-
+<!-- এখানে আপনার আগের CSS <style> কোডটি থাকবে -->
 <style>
-body {
-  margin: 0;
-  font-family: "Poppins", sans-serif;
-  background: linear-gradient(135deg, #0d0f1a 0%, #131727 100%);
-  color: #fff;
-  text-align: center;
-  padding: 40px;
-  overflow-x: hidden;
-}
-.particle {
-  position: absolute;
-  width: 6px; height: 6px;
-  background: rgba(120,132,255,0.7);
-  border-radius: 50%;
-  animation: floatUp 6s linear infinite;
-}
-@keyframes floatUp {
-  0% { transform: translateY(0); opacity: 1; }
-  100% { transform: translateY(-200px); opacity: 0; }
-}
-.box {
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(18px);
-  padding: 40px;
-  border-radius: 22px;
-  width: 90%; max-width: 520px;
-  margin: 60px auto;
-  box-shadow: 0 0 25px rgba(120,132,255,0.25);
-}
-#countdown { font-size: 3.8rem; margin-bottom: 10px; color: #6e82ff; }
-button {
-  margin-top: 20px;
-  padding: 14px 24px;
-  border-radius: 12px;
-  border: none; cursor: pointer;
-  background: #6c7bff; color: #fff; font-size: 1rem;
-}
-#goBtn { display: none; }
-.copyBtn { background: #00c27a; }
-.shareBtn { background: #ff6f3c; margin-left: 10px; }
-#finalLink { margin-top: 12px; color: #d0d4ff; word-break: break-all; }
+/* ... আপনার আগের CSS কোড এখানে পেস্ট করুন ... */
 </style>
 </head>
 
 <body>
-
-<script>
-// floating particles
-for (let i = 0; i < 30; i++) {
-  let p = document.createElement("div");
-  p.className = "particle";
-  p.style.left = Math.random() * window.innerWidth + "px";
-  p.style.top = Math.random() * window.innerHeight + "px";
-  document.body.appendChild(p);
-}
-</script>
 
 <div class="box">
   <h2>Redirecting In</h2>
@@ -75,8 +24,13 @@ for (let i = 0; i < 30; i++) {
   <button class="shareBtn" id="shareBtn">Share</button>
 </div>
 
+<!-- FIX 1: একটি নির্ভরযোগ্য QR Code CDN লিঙ্ক যোগ করুন -->
+<script src="cdnjs.cloudflare.com"></script>
+
+<!-- FIX 2: আপনার জাভাস্ক্রিপ্ট কোডটি </body> ট্যাগের ঠিক আগে রাখুন -->
 <script>
-const BACKEND = "https://shortlify24.onrender.com";
+// ব্যাকএন্ড API URL - এটি আপনার Render URL হতে হবে
+const BACKEND = "https://shortlify24.onrender.com"; 
 
 // DOM elements
 const goBtn = document.getElementById("goBtn");
@@ -85,41 +39,51 @@ const shareBtn = document.getElementById("shareBtn");
 const finalLinkDiv = document.getElementById("finalLink");
 const countdownDiv = document.getElementById("countdown");
 
-// GET shortId from URL path → /r/ab12cd
-const path = window.location.pathname.split("/");
-const id = path[path.length - 1];
+// FIXED: GET shortId from URL query parameter ?c=
+const urlParams = new URLSearchParams(window.location.search);
+const id = urlParams.get('c'); // 'c' is the key we use from index.html
+
+if (!id) {
+    finalLinkDiv.textContent = "Error: Missing link ID";
+    goBtn.style.display = "none";
+    copyBtn.style.display = "none";
+    shareBtn.style.display = "none";
+}
 
 let finalURL = null;
 
 // FIXED API ROUTE — must call /api/info/:id
-fetch(`${BACKEND}/api/info/${id}`)
-  .then(res => res.json())
-  .then(data => {
-    if (data.originalUrl) {
-      finalURL = data.originalUrl;
-      finalLinkDiv.textContent = finalURL;
-    } else {
-      finalLinkDiv.textContent = "Invalid or Expired Link";
-    }
-  })
-  .catch(() => (finalLinkDiv.textContent = "Error loading link!"));
+// Only fetch if ID exists
+if (id) {
+    fetch(`${BACKEND}/api/info/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.originalUrl) {
+          finalURL = data.originalUrl;
+          finalLinkDiv.textContent = finalURL;
+        } else {
+          finalLinkDiv.textContent = "Invalid or Expired Link";
+        }
+      })
+      .catch(() => (finalLinkDiv.textContent = "Error loading link!"));
+}
 
-// Countdown
+// Countdown Timer
 let sec = 10;
 let timer = setInterval(() => {
   countdownDiv.innerText = sec;
   if (sec-- <= 0) {
     clearInterval(timer);
-    goBtn.style.display = "inline-block";
+    if (finalURL) { // Only show button if a valid URL was found
+        goBtn.style.display = "inline-block";
+    }
   }
 }, 1000);
 
 // Get Link (Go button)
 goBtn.onclick = () => {
   if (!finalURL) return;
-
-  window.open(finalURL, "_blank");  // open real link
-  location.href = "/ads/video.html"; // ads page
+  location.href = finalURL;
 };
 
 // Copy Button
@@ -137,6 +101,15 @@ shareBtn.onclick = () => {
     alert("Sharing not supported");
   }
 };
+
+// floating particles (moved here to run after elements exist)
+for (let i = 0; i < 30; i++) {
+  let p = document.createElement("div");
+  p.className = "particle";
+  p.style.left = Math.random() * window.innerWidth + "px";
+  p.style.top = Math.random() * window.innerHeight + "px";
+  document.body.appendChild(p);
+}
 </script>
 
 </body>
