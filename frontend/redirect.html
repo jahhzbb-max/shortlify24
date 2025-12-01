@@ -91,11 +91,11 @@ const id = path[path.length - 1];
 
 let finalURL = null;
 
-// Fetch original URL
-fetch(`${BACKEND}/info/${id}`)
+// FIXED API ROUTE — must call /api/info/:id
+fetch(`${BACKEND}/api/info/${id}`)
   .then(res => res.json())
   .then(data => {
-    if (data.success && data.originalUrl) {
+    if (data.originalUrl) {
       finalURL = data.originalUrl;
       finalLinkDiv.textContent = finalURL;
     } else {

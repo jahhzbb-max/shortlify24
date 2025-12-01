@@ -1,3 +1,5 @@
+// server.js
+
 // ---------------------------
 // Shortlify24 – Backend Server (FIXED)
 // Fully Working + Debug Logs
@@ -19,10 +21,10 @@ app.use(express.json());
 console.log("🚀 Server starting...");
 
 // ---------------------------
-// MONGO CONNECT
+// MONGO CONNECT (dbName option removed)
 // ---------------------------
 mongoose
-  .connect(process.env.MONGO_URI, { dbName: "shortlify24" })
+  .connect(process.env.MONGO_URI) 
   .then(() => console.log("✅ MongoDB Connected Successfully"))
   .catch((err) => console.error("❌ MongoDB Error:", err));
 
@@ -70,6 +72,7 @@ app.post("/api/create", async (req, res) => {
       expireTime = new Date(Date.now() + expireHours * 60 * 60 * 1000);
     }
 
+    // Use create which inherently saves the document
     await ShortURL.create({
       shortId,
       originalUrl,
@@ -84,6 +87,7 @@ app.post("/api/create", async (req, res) => {
       shortUrl: `${process.env.DOMAIN}/redirect.html?c=${shortId}`,
     });
   } catch (err) {
+    console.error("❌ Error in /api/create:", err); // বিস্তারিত লগিং
     res.status(500).json({ error: "Server Error" });
   }
 });
@@ -105,6 +109,7 @@ app.get("/api/info/:id", async (req, res) => {
       expireAt: data.expireAt,
     });
   } catch (err) {
+    console.error("❌ Error in /api/info:", err);
     res.json({ error: "Server Error" });
   }
 });
@@ -130,6 +135,7 @@ app.get("/:shortId", async (req, res) => {
 
     res.redirect(urlDoc.originalUrl);
   } catch (err) {
+    console.error("❌ Error in redirect:", err);
     res.send("Server Error");
   }
 });
