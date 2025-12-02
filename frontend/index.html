@@ -47,6 +47,8 @@ button {
 .copyBtn { background: #00c27a; }
 .shareBtn { background: #ff6f3c; margin-left: 10px; }
 #finalLink { margin-top: 12px; color: #d0d4ff; word-break: break-all; }
+/* Added style for the QR Code container */
+#qrcode { margin-top: 20px; display: inline-block; } 
 </style>
 </head>
 
@@ -59,6 +61,8 @@ button {
   <b>Destination:</b>
   <div id="finalLink">Loading...</div>
 
+  <div id="qrcode"></div> <!-- Added container for QR code -->
+
   <button id="goBtn">Get Link</button>
   <button class="copyBtn" id="copyBtn">Copy URL</button>
   <button class="shareBtn" id="shareBtn">Share</button>
@@ -67,7 +71,7 @@ button {
 <!-- FIX 1: একটি নির্ভরযোগ্য QR Code CDN লিঙ্ক যোগ করুন -->
 <script src="cdnjs.cloudflare.com"></script>
 
-<!-- FIX 2: আপনার জাভাস্ক্রিপ্ট কোডটি </body> ট্যাগের ঠিক আগে রাখুন -->
+<!-- FIX 2: আপনার জাভাস্ক্রিপ্ট কোডটি </body> ট্যাগের ঠিক আগে রাখুন (It is already here) -->
 <script>
 // ব্যাকএন্ড API URL - এটি আপনার Render URL হতে হবে
 const BACKEND = "https://shortlify24.onrender.com"; 
@@ -78,6 +82,7 @@ const copyBtn = document.getElementById("copyBtn");
 const shareBtn = document.getElementById("shareBtn");
 const finalLinkDiv = document.getElementById("finalLink");
 const countdownDiv = document.getElementById("countdown");
+const qrcodeDiv = document.getElementById("qrcode"); // Reference to QR code container
 
 // FIXED: GET shortId from URL query parameter ?c=
 const urlParams = new URLSearchParams(window.location.search);
@@ -92,6 +97,18 @@ if (!id) {
 
 let finalURL = null;
 
+// Function to generate the QR code
+function generateQRCode(url) {
+    new QRCode(qrcodeDiv, {
+        text: url,
+        width: 128,
+        height: 128,
+        colorDark : "#fff",
+        colorLight : "transparent", // Making background transparent to fit the theme
+        correctLevel : QRCode.CorrectLevel.H
+    });
+}
+
 // FIXED API ROUTE — must call /api/info/:id
 // Only fetch if ID exists
 if (id) {
@@ -101,6 +118,7 @@ if (id) {
         if (data.originalUrl) {
           finalURL = data.originalUrl;
           finalLinkDiv.textContent = finalURL;
+          generateQRCode(finalURL); // Generate QR code once URL is fetched
         } else {
           finalLinkDiv.textContent = "Invalid or Expired Link";
         }
