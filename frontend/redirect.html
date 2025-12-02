@@ -4,143 +4,42 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Redirecting...</title>
-
 <style>
 body {
   margin: 0;
-  font-family: "Poppins", sans-serif;
-  background: linear-gradient(135deg, #0d0f1a 0%, #131727 100%);
-  color: #fff;
+  font-family: Poppins, sans-serif;
+  background: #0d0f1a;
+  color: white;
   text-align: center;
-  padding: 40px;
+  padding: 50px;
 }
-.box {
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(18px);
-  padding: 40px;
-  border-radius: 22px;
-  width: 90%; max-width: 520px;
-  margin: 60px auto;
-  box-shadow: 0 0 25px rgba(120,132,255,0.25);
-}
-#countdown { font-size: 3.8rem; margin-bottom: 10px; color: #6e82ff; }
-button {
-  margin-top: 20px;
-  padding: 14px 24px;
-  border-radius: 12px;
-  border: none; cursor: pointer;
-  background: #6c7bff; color: #fff; font-size: 1rem;
-}
-#goBtn { display: none; }
-.copyBtn { background: #00c27a; }
-.shareBtn { background: #ff6f3c; margin-left: 10px; }
-#finalLink { margin-top: 12px; color: #d0d4ff; word-break: break-all; }
-#qrcode { margin-top: 20px; display: inline-block; }
 </style>
 </head>
-
 <body>
 
-<div class="box">
-  <h2>Redirecting In</h2>
-  <div id="countdown">10</div>
-
-  <b>Destination:</b>
-  <div id="finalLink">Loading...</div>
-
-  <div id="qrcode"></div>
-
-  <button id="goBtn">Get Link</button>
-  <button class="copyBtn" id="copyBtn">Copy URL</button>
-  <button class="shareBtn" id="shareBtn">Share</button>
-</div>
-
-<!-- Correct QR Code CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<h2>Redirecting...</h2>
+<p id="message"></p>
 
 <script>
-// Backend API URL
-const BACKEND = "https://shortlify24.onrender.com"; 
+const BACKEND = "https://shortlify24.onrender.com";
+const params = new URLSearchParams(window.location.search);
+const code = params.get("c");
+const msgEl = document.getElementById("message");
 
-// DOM elements
-const goBtn = document.getElementById("goBtn");
-const copyBtn = document.getElementById("copyBtn");
-const shareBtn = document.getElementById("shareBtn");
-const finalLinkDiv = document.getElementById("finalLink");
-const countdownDiv = document.getElementById("countdown");
-const qrcodeDiv = document.getElementById("qrcode");
-
-// Get shortId from URL parameter ?c=
-const urlParams = new URLSearchParams(window.location.search);
-const id = urlParams.get('c');
-
-if (!id) {
-    finalLinkDiv.textContent = "Error: Missing link ID";
-    goBtn.style.display = "none";
-    copyBtn.style.display = "none";
-    shareBtn.style.display = "none";
+if (!code) {
+    msgEl.textContent = "Invalid link!";
+} else {
+    fetch(`${BACKEND}/api/resolve/${code}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                msgEl.textContent = "Link expired or not found!";
+            }
+        })
+        .catch(() => msgEl.textContent = "Server error!");
 }
-
-let finalURL = null;
-
-// QR Code Generator
-function generateQRCode(url) {
-    new QRCode(qrcodeDiv, {
-        text: url,
-        width: 128,
-        height: 128,
-        colorDark : "#fff",
-        colorLight : "transparent",
-        correctLevel : QRCode.CorrectLevel.H
-    });
-}
-
-// Fetch original URL
-if (id) {
-    fetch(`${BACKEND}/api/info/${id}`)
-    .then(res => res.json())
-    .then(data => {
-        if (data.originalUrl) {
-            finalURL = data.originalUrl;
-            finalLinkDiv.textContent = finalURL;
-            generateQRCode(finalURL);
-        } else {
-            finalLinkDiv.textContent = "Invalid or Expired Link";
-        }
-    })
-    .catch(() => finalLinkDiv.textContent = "Error loading link!");
-}
-
-// Countdown Timer
-let sec = 10;
-let timer = setInterval(() => {
-  countdownDiv.innerText = sec;
-  if (sec-- <= 0) {
-    clearInterval(timer);
-    if (finalURL) goBtn.style.display = "inline-block";
-  }
-}, 1000);
-
-// Go Button
-goBtn.onclick = () => {
-  if (finalURL) location.href = finalURL;
-};
-
-// Copy Button
-copyBtn.onclick = () => {
-  navigator.clipboard.writeText(finalURL || "");
-  copyBtn.textContent = "Copied!";
-  setTimeout(() => (copyBtn.textContent = "Copy URL"), 1500);
-};
-
-// Share Button
-shareBtn.onclick = () => {
-  if (navigator.share) {
-    navigator.share({ title: "Shortened Link", url: finalURL });
-  } else {
-    alert("Sharing not supported");
-  }
-};
 </script>
 
 </body>

@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Shortlify</title>
-
 <style>
 body {
   margin: 0;
@@ -32,9 +31,13 @@ button {
   font-size: 16px;
   cursor: pointer;
 }
+#shortLink a {
+  color: #6c7bff;
+  text-decoration: none;
+  word-break: break-all;
+}
 </style>
 </head>
-
 <body>
 
 <h1>Shortlify URL Shortener</h1>
@@ -42,27 +45,37 @@ button {
 <input type="text" id="longUrl" placeholder="Enter your URL..." />
 <button id="shortBtn">Shorten</button>
 
+<p id="shortLink"></p>
+
 <script>
 const BACKEND = "https://shortlify24.onrender.com";
 
-document.getElementById("shortBtn").onclick = () => {
+document.getElementById("shortBtn").onclick = async () => {
     const url = document.getElementById("longUrl").value.trim();
     if (!url) return alert("Enter a URL first!");
 
-    fetch(`${BACKEND}/api/shorten`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url })
-    })
-    .then(res => res.json())
-    .then(data => {
+    try {
+        const res = await fetch(`${BACKEND}/api/shorten`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url })
+        });
+
+        const data = await res.json();
+        console.log(data);
+
         if (data.id) {
-            window.location.href = `/redirect.html?c=${data.id}`;
+            const shortUrl = `${window.location.origin}/redirect.html?c=${data.id}`;
+            document.getElementById("shortLink").innerHTML = `
+                Short URL: <a href="${shortUrl}" target="_blank">${shortUrl}</a>
+            `;
         } else {
             alert("Error shortening URL");
         }
-    })
-    .catch(() => alert("Server error!"));
+    } catch (err) {
+        console.error(err);
+        alert("Server error!");
+    }
 };
 </script>
 
