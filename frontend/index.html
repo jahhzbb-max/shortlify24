@@ -3,171 +3,67 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Redirecting...</title>
+<title>Shortlify</title>
 
 <style>
 body {
   margin: 0;
-  font-family: "Poppins", sans-serif;
-  background: linear-gradient(135deg, #0d0f1a 0%, #131727 100%);
-  color: #fff;
+  font-family: Poppins, sans-serif;
+  background: #0d0f1a;
+  color: white;
   text-align: center;
-  padding: 40px;
-  overflow-x: hidden;
+  padding: 50px;
 }
-.particle {
-  position: absolute;
-  width: 6px; height: 6px;
-  background: rgba(120,132,255,0.7);
-  border-radius: 50%;
-  animation: floatUp 6s linear infinite;
+input {
+  width: 80%;
+  max-width: 500px;
+  padding: 15px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
 }
-@keyframes floatUp {
-  0% { transform: translateY(0); opacity: 1; }
-  100% { transform: translateY(-200px); opacity: 0; }
-}
-.box {
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(18px);
-  padding: 40px;
-  border-radius: 22px;
-  width: 90%; max-width: 520px;
-  margin: 60px auto;
-  box-shadow: 0 0 25px rgba(120,132,255,0.25);
-}
-#countdown { font-size: 3.8rem; margin-bottom: 10px; color: #6e82ff; }
 button {
   margin-top: 20px;
-  padding: 14px 24px;
+  padding: 14px 25px;
+  background: #6c7bff;
+  border: none;
   border-radius: 12px;
-  border: none; cursor: pointer;
-  background: #6c7bff; color: #fff; font-size: 1rem;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
 }
-#goBtn { display: none; }
-.copyBtn { background: #00c27a; }
-.shareBtn { background: #ff6f3c; margin-left: 10px; }
-#finalLink { margin-top: 12px; color: #d0d4ff; word-break: break-all; }
-/* Added style for the QR Code container */
-#qrcode { margin-top: 20px; display: inline-block; } 
 </style>
 </head>
 
 <body>
 
-<div class="box">
-  <h2>Redirecting In</h2>
-  <div id="countdown">10</div>
+<h1>Shortlify URL Shortener</h1>
 
-  <b>Destination:</b>
-  <div id="finalLink">Loading...</div>
+<input type="text" id="longUrl" placeholder="Enter your URL..." />
+<button id="shortBtn">Shorten</button>
 
-  <div id="qrcode"></div> <!-- Added container for QR code -->
-
-  <button id="goBtn">Get Link</button>
-  <button class="copyBtn" id="copyBtn">Copy URL</button>
-  <button class="shareBtn" id="shareBtn">Share</button>
-</div>
-
-<!-- FIX 1: একটি নির্ভরযোগ্য QR Code CDN লিঙ্ক যোগ করুন -->
-<script src="cdnjs.cloudflare.com"></script>
-
-<!-- FIX 2: আপনার জাভাস্ক্রিপ্ট কোডটি </body> ট্যাগের ঠিক আগে রাখুন (It is already here) -->
 <script>
-// ব্যাকএন্ড API URL - এটি আপনার Render URL হতে হবে
-const BACKEND = "https://shortlify24.onrender.com"; 
+const BACKEND = "https://shortlify24.onrender.com";
 
-// DOM elements
-const goBtn = document.getElementById("goBtn");
-const copyBtn = document.getElementById("copyBtn");
-const shareBtn = document.getElementById("shareBtn");
-const finalLinkDiv = document.getElementById("finalLink");
-const countdownDiv = document.getElementById("countdown");
-const qrcodeDiv = document.getElementById("qrcode"); // Reference to QR code container
+document.getElementById("shortBtn").onclick = () => {
+    const url = document.getElementById("longUrl").value.trim();
+    if (!url) return alert("Enter a URL first!");
 
-// FIXED: GET shortId from URL query parameter ?c=
-const urlParams = new URLSearchParams(window.location.search);
-const id = urlParams.get('c'); // 'c' is the key we use from index.html
-
-if (!id) {
-    finalLinkDiv.textContent = "Error: Missing link ID";
-    goBtn.style.display = "none";
-    copyBtn.style.display = "none";
-    shareBtn.style.display = "none";
-}
-
-let finalURL = null;
-
-// Function to generate the QR code
-function generateQRCode(url) {
-    new QRCode(qrcodeDiv, {
-        text: url,
-        width: 128,
-        height: 128,
-        colorDark : "#fff",
-        colorLight : "transparent", // Making background transparent to fit the theme
-        correctLevel : QRCode.CorrectLevel.H
-    });
-}
-
-// FIXED API ROUTE — must call /api/info/:id
-// Only fetch if ID exists
-if (id) {
-    fetch(`${BACKEND}/api/info/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.originalUrl) {
-          finalURL = data.originalUrl;
-          finalLinkDiv.textContent = finalURL;
-          generateQRCode(finalURL); // Generate QR code once URL is fetched
+    fetch(`${BACKEND}/api/shorten`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.id) {
+            window.location.href = `/redirect.html?c=${data.id}`;
         } else {
-          finalLinkDiv.textContent = "Invalid or Expired Link";
+            alert("Error shortening URL");
         }
-      })
-      .catch(() => (finalLinkDiv.textContent = "Error loading link!"));
-}
-
-// Countdown Timer
-let sec = 10;
-let timer = setInterval(() => {
-  countdownDiv.innerText = sec;
-  if (sec-- <= 0) {
-    clearInterval(timer);
-    if (finalURL) { // Only show button if a valid URL was found
-        goBtn.style.display = "inline-block";
-    }
-  }
-}, 1000);
-
-// Get Link (Go button)
-goBtn.onclick = () => {
-  if (!finalURL) return;
-  location.href = finalURL;
+    })
+    .catch(() => alert("Server error!"));
 };
-
-// Copy Button
-copyBtn.onclick = () => {
-  navigator.clipboard.writeText(finalURL || "");
-  copyBtn.textContent = "Copied!";
-  setTimeout(() => (copyBtn.textContent = "Copy URL"), 1500);
-};
-
-// Share Button
-shareBtn.onclick = () => {
-  if (navigator.share) {
-    navigator.share({ title: "Shortened Link", url: finalURL });
-  } else {
-    alert("Sharing not supported");
-  }
-};
-
-// floating particles (moved here to run after elements exist)
-for (let i = 0; i < 30; i++) {
-  let p = document.createElement("div");
-  p.className = "particle";
-  p.style.left = Math.random() * window.innerWidth + "px";
-  p.style.top = Math.random() * window.innerHeight + "px";
-  document.body.appendChild(p);
-}
 </script>
 
 </body>

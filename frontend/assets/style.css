@@ -1,1 +1,159 @@
-<link rel="stylesheet" href="/assets/style.css">
+/* Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background: #f2f5ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* ============================
+   CARD / CONTAINER
+=============================== */
+.container {
+    background: #fff;
+    width: 100%;
+    max-width: 450px;
+    padding: 25px 30px;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.10);
+    text-align: center;
+}
+
+/* ============================
+   TYPOGRAPHY
+=============================== */
+.container h2 {
+    font-size: 26px;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 15px;
+}
+
+.container p {
+    color: #555;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+/* ============================
+   INPUT FIELD
+=============================== */
+.input-group {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: 0.3s;
+}
+
+input:focus {
+    border-color: #4A60E0;
+    box-shadow: 0 0 0 2px rgba(74, 96, 224, 0.2);
+}
+
+/* ============================
+   BUTTON
+=============================== */
+button {
+    padding: 12px 20px;
+    background: #4A60E0;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #3a4ec0;
+}
+
+/* ============================
+   RESULT BOX (Home Page)
+=============================== */
+.result-box {
+    margin-top: 20px;
+    padding: 15px;
+    background: #eef1ff;
+    border-radius: 12px;
+    display: none;
+    text-align: left;
+}
+
+.result-box a {
+    color: #4A60E0;
+    font-weight: 500;
+    word-break: break-all;
+}
+
+/* ============================
+   REDIRECT PAGE
+=============================== */
+#redirect-info {
+    margin-top: 20px;
+}
+
+.loading-text {
+    margin-top: 15px;
+    color: #666;
+    font-size: 15px;
+}
+
+/* QR Code Box */
+#qrcode {
+    margin: 22px auto;
+    width: max-content;
+    padding: 15px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* Timer style */
+.timer-box {
+    margin-top: 15px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* ============================
+   FOOTER
+=============================== */
+footer {
+    margin-top: 25px;
+    font-size: 13px;
+    color: #777;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .container {
+        max-width: 360px;
+        padding: 20px;
+    }
+
+    h2 {
+        font-size: 22px;
+    }
+}
