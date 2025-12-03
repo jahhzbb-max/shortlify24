@@ -18,7 +18,7 @@ body {
 <body>
 
 <h2>Redirecting...</h2>
-<p id="message"></p>
+<p id="message">Loading destination...</p> <!-- Added loading message -->
 
 <script>
 const BACKEND = "https://shortlify24.onrender.com";
@@ -29,11 +29,13 @@ const msgEl = document.getElementById("message");
 if (!code) {
     msgEl.textContent = "Invalid link!";
 } else {
-    fetch(`${BACKEND}/api/resolve/${code}`)
+    // FIXED: Changed /api/resolve to /api/info
+    fetch(`${BACKEND}/api/info/${code}`)
         .then(res => res.json())
         .then(data => {
-            if (data.url) {
-                window.location.href = data.url;
+            // FIXED: Changed data.url to data.originalUrl
+            if (data.originalUrl) { 
+                window.location.href = data.originalUrl;
             } else {
                 msgEl.textContent = "Link expired or not found!";
             }
