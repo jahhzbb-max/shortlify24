@@ -18,10 +18,12 @@ body {
 <body>
 
 <h2>Redirecting...</h2>
-<p id="message">Loading destination...</p> <!-- Added loading message -->
+<p id="message">Loading destination...</p>
 
 <script>
-const BACKEND = "https://shortlify24.onrender.com";
+// BACKEND URL টি মুছে ফেলা হয়েছে
+// const BACKEND = "https://shortlify24.onrender.com"; 
+
 const params = new URLSearchParams(window.location.search);
 const code = params.get("c");
 const msgEl = document.getElementById("message");
@@ -29,11 +31,10 @@ const msgEl = document.getElementById("message");
 if (!code) {
     msgEl.textContent = "Invalid link!";
 } else {
-    // FIXED: Changed /api/resolve to /api/info
-    fetch(`${BACKEND}/api/info/${code}`)
+    // fetch URL পরিবর্তন করে Vercel-এর জন্য রিলেটিভ পাথ করা হয়েছে
+    fetch(`/api/info/${code}`)
         .then(res => res.json())
         .then(data => {
-            // FIXED: Changed data.url to data.originalUrl
             if (data.originalUrl) { 
                 window.location.href = data.originalUrl;
             } else {

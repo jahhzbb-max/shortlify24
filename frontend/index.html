@@ -48,14 +48,16 @@ button {
 <p id="shortLink"></p>
 
 <script>
-const BACKEND = "https://shortlify24.onrender.com";
+// BACKEND URL টি মুছে ফেলা হয়েছে, কারণ আমরা এখন Vercel API ব্যবহার করব
+// const BACKEND = "https://shortlify24.onrender.com"; 
 
 document.getElementById("shortBtn").onclick = async () => {
     const url = document.getElementById("longUrl").value.trim();
     if (!url) return alert("Enter a URL first!");
 
     try {
-        const res = await fetch(`${BACKEND}/api/shorten`, {
+        // fetch URL পরিবর্তন করে Vercel-এর জন্য রিলেটিভ পাথ করা হয়েছে
+        const res = await fetch(`/api/shorten`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url })
@@ -65,7 +67,8 @@ document.getElementById("shortBtn").onclick = async () => {
         console.log(data);
 
         if (data.id) {
-            const shortUrl = `${window.location.origin}/redirect.html?c=${data.id}`;
+            // URL পরিবর্তন করে সরাসরি ডোমেইনের পরে শর্ট আইডি ব্যবহার করার জন্য
+            const shortUrl = `${window.location.origin}/${data.id}`;
             document.getElementById("shortLink").innerHTML = `
                 Short URL: <a href="${shortUrl}" target="_blank">${shortUrl}</a>
             `;

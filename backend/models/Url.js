@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
 
 const urlSchema = new mongoose.Schema({
+    originalUrl: {
+        type: String,
+        required: true
+    },
     shortId: {
         type: String,
         required: true,
         unique: true
-    },
-    originalUrl: {
-        type: String,
-        required: true
     },
     date: {
         type: Date,
@@ -17,4 +17,3 @@ const urlSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Url', urlSchema);
-
