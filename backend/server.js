@@ -6,10 +6,12 @@ if (process.env.NODE_ENV !== 'production') {
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const Url = require('./models/Url'); // Import the URL model
+// Make sure you have a models/Url.js file for this to work
+const Url = require('./models/Url'); 
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+// Vercel handles the port automatically
+// const PORT = process.env.PORT || 5000; 
 
 // Middleware
 app.use(express.json()); // Allows parsing JSON bodies
@@ -19,10 +21,10 @@ const frontendUrl = process.env.FRONTEND_URL;
 if (frontendUrl) {
     app.use(cors({ origin: frontendUrl }));
 } else {
-    app.use(cors()); // Allow all origins if frontend URL is not set (less secure)
+    app.use(cors()); // Allow all origins if frontend URL is not set
 }
 
-// MongoDB Connection
+// MongoDB Connection (Connect only once when the function is initialized)
 const mongoURI = process.env.MONGODB_URI;
 if (mongoURI) {
     mongoose.connect(mongoURI, {
@@ -43,7 +45,6 @@ app.get('/api/info/:id', async (req, res) => {
     try {
         const urlEntry = await Url.findOne({ shortId: req.params.id });
         if (urlEntry) {
-            // Return original URL info to frontend redirect page
             return res.json({ originalUrl: urlEntry.originalUrl });
         } else {
             return res.status(404).json('No URL found');
@@ -54,9 +55,9 @@ app.get('/api/info/:id', async (req, res) => {
     }
 });
 
-// 2. Route to create a new short URL (You will need a frontend form to use this)
+// 2. Route to create a new short URL
 app.post('/api/shorten', async (req, res) => {
-    const { originalUrl } = req.body;
+    const { url: originalUrl } = req.body; // Renamed to match schema field name
     // Add validation here if needed
 
     try {
@@ -64,7 +65,7 @@ app.post('/api/shorten', async (req, res) => {
         if (url) {
             res.json(url);
         } else {
-            // Generate a simple short ID (e.g., using nanoid package)
+            // Generate a simple short ID (using nanoid package is better)
             const shortId = Math.random().toString(36).substr(2, 6); 
             url = new Url({
                 originalUrl,
@@ -82,24 +83,13 @@ app.post('/api/shorten', async (req, res) => {
 
 
 // 3. Main Redirect Route (Handle actual redirection)
-// This route typically needs to be handled by your backend host's routing, 
-// or you can configure it here if your host allows wildcards.
-app.get('/:shortId', async (req, res) => {
-    try {
-        const urlEntry = await Url.findOne({ shortId: req.params.shortId });
-        if (urlEntry) {
-            // Redirect the user to the original URL
-            return res.redirect(urlEntry.originalUrl);
-        } else {
-            // If ID not found, redirect to frontend homepage with an error
-            return res.redirect(process.env.FRONTEND_URL || '/');
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).json('Server error');
-    }
-});
+// This must be handled by Vercel rewrites or a different function. 
+// For this setup, we assume Vercel routing handles this.
+
+// Remove the app.listen line
+// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
+// Vercel Export (CRITICAL CHANGE)
+// We export the Express app so Vercel can use it as a serverless function handler.
+module.exports = app;
