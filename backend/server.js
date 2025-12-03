@@ -1,149 +1,105 @@
-// server.js
-
-// ---------------------------
-// Shortlify24 – Backend Server (FIXED)
-// Fully Working + Debug Logs
-// ---------------------------
-
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import dotenv from "dotenv";
-import crypto from "crypto";
-
-dotenv.config();
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-console.log("🚀 Server starting...");
-
-// ---------------------------
-// MONGO CONNECT (dbName option removed)
-// ---------------------------
-mongoose
-  .connect(process.env.MONGO_URI) 
-  .then(() => console.log("✅ MongoDB Connected Successfully"))
-  .catch((err) => console.error("❌ MongoDB Error:", err));
-
-// ---------------------------
-// URL SCHEMA
-// ---------------------------
-const urlSchema = new mongoose.Schema({
-  shortId: { type: String, required: true, unique: true },
-  originalUrl: { type: String, required: true },
-  clicks: { type: Number, default: 0 },
-  createdAt: { type: Date, default: Date.now },
-  expireAt: { type: Date, default: null },
-});
-
-const ShortURL = mongoose.model("ShortURL", urlSchema);
-
-// ---------------------------
-// Generate Unique ID
-// ---------------------------
-function generateShortId() {
-  return crypto.randomBytes(4).toString("hex"); // 8 chars
+// Load environment variables if not in production
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
 }
 
-// ---------------------------
-// HOME ROUTE
-// ---------------------------
-app.get("/", (req, res) => {
-  res.json({ success: true, server: "Shortlify24 backend running" });
-});
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const Url = require('./models/Url'); // Import the URL model
 
-// ---------------------------
-// CREATE SHORT URL (Used by Frontend)
-// ---------------------------
-app.post("/api/create", async (req, res) => {
-  try {
-    console.log("📩 POST /api/create:", req.body);
-
-    const { originalUrl, expireHours } = req.body;
-    if (!originalUrl) return res.status(400).json({ error: "URL is required" });
-
-    const shortId = generateShortId();
-
-    let expireTime = null;
-    if (expireHours) {
-      expireTime = new Date(Date.now() + expireHours * 60 * 60 * 1000);
-    }
-
-    // Use create which inherently saves the document
-    await ShortURL.create({
-      shortId,
-      originalUrl,
-      expireAt: expireTime,
-    });
-
-    console.log("✅ URL SHORTENED →", shortId);
-
-    res.json({
-      success: true,
-      shortId,
-      shortUrl: `${process.env.DOMAIN}/redirect.html?c=${shortId}`,
-    });
-  } catch (err) {
-    console.error("❌ Error in /api/create:", err); // বিস্তারিত লগিং
-    res.status(500).json({ error: "Server Error" });
-  }
-});
-
-// ---------------------------
-// API INFO ROUTE (Frontend calls this)
-// ---------------------------
-app.get("/api/info/:id", async (req, res) => {
-  try {
-    console.log("📩 INFO REQUEST:", req.params.id);
-
-    const data = await ShortURL.findOne({ shortId: req.params.id });
-
-    if (!data) return res.json({ originalUrl: null });
-
-    res.json({
-      originalUrl: data.originalUrl,
-      clicks: data.clicks,
-      expireAt: data.expireAt,
-    });
-  } catch (err) {
-    console.error("❌ Error in /api/info:", err);
-    res.json({ error: "Server Error" });
-  }
-});
-
-// ---------------------------
-// DIRECT REDIRECT (Last Route)
-// ---------------------------
-app.get("/:shortId", async (req, res) => {
-  try {
-    const { shortId } = req.params;
-    console.log("📩 REDIRECT REQUEST:", shortId);
-
-    const urlDoc = await ShortURL.findOne({ shortId });
-    if (!urlDoc) return res.send("Invalid or expired link");
-
-    // Check expiry
-    if (urlDoc.expireAt && new Date() > urlDoc.expireAt) {
-      return res.send("This short link has expired.");
-    }
-
-    urlDoc.clicks += 1;
-    await urlDoc.save();
-
-    res.redirect(urlDoc.originalUrl);
-  } catch (err) {
-    console.error("❌ Error in redirect:", err);
-    res.send("Server Error");
-  }
-});
-
-// ---------------------------
-// SERVER START
-// ---------------------------
+const app = express();
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(`🚀 Server Live on PORT ${PORT}`)
-);
+
+// Middleware
+app.use(express.json()); // Allows parsing JSON bodies
+
+// Configure CORS for your frontend URL
+const frontendUrl = process.env.FRONTEND_URL;
+if (frontendUrl) {
+    app.use(cors({ origin: frontendUrl }));
+} else {
+    app.use(cors()); // Allow all origins if frontend URL is not set (less secure)
+}
+
+// MongoDB Connection
+const mongoURI = process.env.MONGODB_URI;
+if (mongoURI) {
+    mongoose.connect(mongoURI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    })
+    .then(() => console.log('MongoDB connected successfully'))
+    .catch(err => console.error('MongoDB connection error:', err));
+} else {
+    console.error('MONGODB_URI environment variable not set.');
+}
+
+
+// --- API Routes ---
+
+// 1. Route to get info about a specific URL ID (used by redirect page)
+app.get('/api/info/:id', async (req, res) => {
+    try {
+        const urlEntry = await Url.findOne({ shortId: req.params.id });
+        if (urlEntry) {
+            // Return original URL info to frontend redirect page
+            return res.json({ originalUrl: urlEntry.originalUrl });
+        } else {
+            return res.status(404).json('No URL found');
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json('Server error');
+    }
+});
+
+// 2. Route to create a new short URL (You will need a frontend form to use this)
+app.post('/api/shorten', async (req, res) => {
+    const { originalUrl } = req.body;
+    // Add validation here if needed
+
+    try {
+        let url = await Url.findOne({ originalUrl });
+        if (url) {
+            res.json(url);
+        } else {
+            // Generate a simple short ID (e.g., using nanoid package)
+            const shortId = Math.random().toString(36).substr(2, 6); 
+            url = new Url({
+                originalUrl,
+                shortId,
+                date: new Date()
+            });
+            await url.save();
+            res.status(201).json(url);
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json('Server error');
+    }
+});
+
+
+// 3. Main Redirect Route (Handle actual redirection)
+// This route typically needs to be handled by your backend host's routing, 
+// or you can configure it here if your host allows wildcards.
+app.get('/:shortId', async (req, res) => {
+    try {
+        const urlEntry = await Url.findOne({ shortId: req.params.shortId });
+        if (urlEntry) {
+            // Redirect the user to the original URL
+            return res.redirect(urlEntry.originalUrl);
+        } else {
+            // If ID not found, redirect to frontend homepage with an error
+            return res.redirect(process.env.FRONTEND_URL || '/');
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json('Server error');
+    }
+});
+
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
